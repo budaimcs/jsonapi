@@ -178,7 +178,7 @@ public function fill_data($values) {
 public function add_relation($key, $relation, $skip_include=false) {
 	if ($relation instanceof \alsvanzelf\jsonapi\resource) {
 		$relation_array = $relation->get_array();
-		
+
 		// add whole resources as included resource, while keeping the relationship
 		if (!empty($relation_array['data']['attributes']) && $skip_include == false) {
 			$this->add_included_resource($relation);
@@ -187,7 +187,7 @@ public function add_relation($key, $relation, $skip_include=false) {
 		$relation = array(
 			'links' => array(
 				'self'    => $this->links['self'].'/relationships/'.$key,
-				'related' => $this->links['self'].'/'.$key,
+				'related' => $relation->links['self'].'/'.$key,
 			),
 			'data'  => array(
 				'type' => $relation_array['data']['type'],
@@ -198,6 +198,32 @@ public function add_relation($key, $relation, $skip_include=false) {
 		}
 	}
 	
+	if ($relation instanceof \alsvanzelf\jsonapi\collection) {
+		$relation_array = $relation->get_array();
+		
+// 		// add whole resources as included resource, while keeping the relationship
+// 		if (!empty($relation_array['data']['attributes']) && $skip_include == false) {
+// 			$this->add_included_resource($relation);
+// 		}
+	
+		$relation = array(
+			'links' => array(
+				'self'    => $this->links['self'].'/relationships/'.$key,
+				'related' => $relation->links['self'],
+				
+			),
+			'data' => array()
+		);
+// 		print_r($relation_array);die();
+		foreach( $relation_array['data'] as $i=>$element )
+		{
+			$relation['data'][$i] = array('type' => $element['type'], 'links' => $element["links"]);
+			if (!empty($element['id'])) {
+				$relation['data'][$i]['id'] = $element['id'];
+			}
+		}	
+	}
+// 	print_R($relation);
 	if (is_array($relation) == false) {
 		throw new \Exception('unknown relation format');
 	}
